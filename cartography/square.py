@@ -3,15 +3,14 @@ from cartography.gridspace import GridSpace
 from cartography.direction import Direction
 import math
 
-class Hex(GridSpace):
+class Square(GridSpace):
 	def __init__(self, map, coords, x=-1, y=-1, color = "white", text_color = "red"):
 		super().__init__(map, coords, x, y, color, text_color)
 		point_one = coords[0]
 		point_two = coords[1]
-		point_four = coords[3]
+		self.edge_length = int(point_two[0]-point_one[0])
+		self.center = (int(point_one[0]+(self.edge_length/2)), int(point_one[1]+(self.edge_length/2)))
 		
-		self.center = [int((point_one[0]+point_four[0])/2), int((point_one[1]+point_four[1])/2)]
-		self.edge_length = int(math.sqrt(math.pow(point_two[0] - point_one[0], 2) + math.pow(point_two[1] - point_one[1], 2)))
 
 	def calculate_font_size(self, text):
 		font_size = 1
@@ -24,35 +23,23 @@ class Hex(GridSpace):
 
 	def get_adjacent(self, direction):
 		if direction == Direction.SOUTH_WEST:
-			if self._x % 2 == 0:
-				return self.map.get_space((self._x-1, self._y))
-			else:
-				return self.map.get_space((self._x-1, self._y-1))
+			return self.map.get_space((self._x-1, self._y-1))
 		elif direction == Direction.SOUTH:
 			return self.map.get_space((self._x, self._y-1))
 		elif direction == Direction.SOUTH_EAST:
-			if self._x % 2 == 0:
-				return self.map.get_space((self._x+1, self._y))
-			else:
-				return self.map.get_space((self._x+1, self._y-1))
+			return self.map.get_space((self._x+1, self._y-1))
 		elif direction == Direction.WEST:
-			return None
+			return self.map.get_space((self._x-1, self._y))
 		elif direction == Direction.CENTER:
 			return self
 		elif direction == Direction.EAST:
-			return None
+			return self.map.get_space((self._x+1, self._y))
 		elif direction == Direction.NORTH_WEST:
-			if self._x % 2 == 0:
-				return self.map.get_space((self._x-1, self._y+1))
-			else:
-				return self.map.get_space((self._x-1, self._y))
+			return self.map.get_space((self._x-1, self._y+1))
 		elif direction == Direction.NORTH:
 			return self.map.get_space((self._x, self._y+1))
 		elif direction == Direction.NORTH_EAST:
-			if self._x % 2 == 0:
-				return self.map.get_space((self._x+1, self._y+1))
-			else:
-				return self.map.get_space((self._x+1, self._y))
+			return self.map.get_space((self._x+1, self._y+1))
 		else:
 			return None
 			

@@ -1,27 +1,51 @@
 from PIL import Image, ImageDraw, ImageFont
 from cartography.hex import Hex
+from cartography.square import Square
 from cartography.token import Token
 from specktre import tilings
 import math
 	
 class Map:
-	def __init__(self, width, height, edge_length):
+	def __init__(self, width, height, edge_length, type = "square"):
 		self.edge_length = edge_length
-		self.short_diagnol = int(math.sqrt(3)*edge_length)
-		self.long_diagnol = 2*edge_length
-
-		dif = int((self.long_diagnol - edge_length)/2)
-		self.image_width = self.long_diagnol + int((self.long_diagnol-dif)*(width-1))
-		self.image_height = (self.short_diagnol+1)*height
-
 		self.map_color = "white" #error check map color
-		self.hexes = dict()
+		self.spaces = dict()
 		self.last_move = None
 		self.tokens = dict()
 
-		coordinates = tilings.generate_hexagons(self.image_width, self.image_height, self.edge_length)
+		space_list = None
+		if type == "square":
+			space_list = self.generate_square_map(width, height)
+		elif type == "hex":
+			space_list = self.generate_hex_map(width, height)
+		else:
+			raise ValueError(f"Unknown map type '{type}' specified.")
 
-		hex_list = list()
+		space_list.sort()
+		space_x = 0
+		space_y = 0
+		prev_y = self.image_height
+		for space in space_list:
+			if(space.center[1] >= prev_y):
+				space_x += 1
+				space_y = 0
+			space.position = (space_x, space_y)
+			space_y += 1
+			prev_y = space.center[1]
+			self.spaces[space.position] = space
+		
+
+	def generate_hex_map(self, width, height):
+		short_diagnol = int(math.sqrt(3)*self.edge_length)
+		long_diagnol = int(2*self.edge_length)
+
+		dif = int((long_diagnol - self.edge_length)/2)
+		self.image_width = long_diagnol + int((long_diagnol-dif)*(width-1))
+		self.image_height = (short_diagnol+1)*height
+
+		coordinates= None
+		coordinates = tilings.generate_hexagons(self.image_width, self.image_height, self.edge_length)
+		space_list = list()
 		for coords in coordinates:
 			for x,y in coords:
 				valid = True
@@ -30,28 +54,35 @@ class Map:
 					break
 			if valid:
 				new_hex = Hex(self, coords)
-				hex_list.append(new_hex)
-				
-		hex_list.sort()
-		hex_x = 0
-		hex_y = 0
-		prev_y = self.image_height
-		for hex in hex_list:
-			if(hex.center[1] >= prev_y):
-				hex_x += 1
-				hex_y = 0
-			hex.position = (hex_x, hex_y)
-			hex_y += 1
-			prev_y = hex.center[1]
-			self.hexes[hex.position] = hex
+				space_list.append(new_hex)
+		return space_list
 
-	def drawMap(self, file_path, draw_move=False):
+	def generate_square_map(self, width, height):
+		self.image_width = self.edge_length * width
+		self.image_height = self.edge_length * height
+
+		coordinates= None
+		coordinates = tilings.generate_squares(self.image_width, self.image_height, self.edge_length)
+		space_list = list()
+		for coords in coordinates:
+			for x,y in coords:
+				valid = True
+				if x < 0 or y < 0 or x > self.image_width or y > self.image_height:
+					valid = False
+					break
+			if valid:
+				new_hex = Square(self, coords)
+				space_list.append(new_hex)
+		return space_list
+				
+
+	def draw_map(self, file_path, draw_move=False):
 		# Create a blank 500x500 pixel image
 		im = Image.new("RGB", (self.image_width, self.image_height), color = 'white')
 
 		# Draw
-		for pos, hex in self.hexes.items():
-			hex.draw(im)
+		for pos, space in self.spaces.items():
+			space.draw(im)
 
 		if draw_move:
 			line_coords = (self.last_move[0].center[0], self.last_move[0].center[1], self.last_move[1].center[0], self.last_move[1].center[1])
@@ -60,39 +91,39 @@ class Map:
 		# Save the image to disk
 		im.save(file_path)
 
-	def getHex(self, pos):
+	def get_space(self, pos):
 		try:
-			return self.hexes[pos]
+			return self.spaces[pos]
 		except KeyError:
 			return None
 
-	def paintHex(self, position, hex_color, text_color):
-		hex = self.getHex(position)
-		hex.hex_color = hex_color
-		hex.text_color = text_color
+	def paint_space(self, position, color, text_color):
+		space = self.get_space(position)
+		space.color = color
+		space.text_color = text_color
 
 
-	def addToken(self, name, position, image, image_url):
+	def add_token(self, name, position, image, image_url):
 		if name not in self.tokens:
 			t = Token(name, position, image, image_url)
 			self.tokens[name.lower()] = t
 		else:
 			raise ValueError("Token name already exists on this map.")
 
-	def deleteToken(self, name):
+	def delete_token(self, name):
 		if name in self.tokens:
 			t = self.tokens.pop(name.lower())
-			if isinstance(t.position, Hex):
+			if t.position is not None:
 				t.position.contents.remove(t)
 		else:
 			raise ValueError(f"Token '{name}' not found on this map.")
 
-	def clearTokens(self):
+	def clear_tokens(self):
 		t_list = list(self.tokens.items())
 		for k, v in t_list:
-			self.deleteToken(k)
+			self.delete_token(k)
 
-	def stepToken(self, token_name, direction, distance):
+	def step_token(self, token_name, direction, distance):
 		if token_name.lower() in self.tokens:
 			token = self.tokens[token_name.lower()]
 			old_location = token.position
@@ -102,12 +133,12 @@ class Map:
 		else:
 			raise ValueError(f"Token '{name}' not found on this map.")
 
-	def moveToken(self, token_name, position):
+	def move_token(self, token_name, position):
 		if token_name.lower() in self.tokens:
 			token = self.tokens[token_name.lower()]
 			old_location = token.position
 			new_location = position
-			token.setPosition(position)
+			token.set_position(position)
 			if old_location is not new_location:
 				self.last_move = (old_location, new_location)
 		else:

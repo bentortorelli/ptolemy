@@ -8,17 +8,19 @@ class Maptools:
 	def __init__(self, bot):
 		self.maps = dict()
 		self.bot = bot
-
-	@commands.command(pass_context=True, brief="Creates a new map for the server.", description="Creates a new map for the server, only one map can exist for a server at a time.")
-	async def create(self, ctx, width, height, edge_length=50):
+	@commands.command(pass_context=True)
+	async def create(self, ctx, width, height, type = "square", edge_length=50):
+		"""Creates a new map for the server.
+		Only one map can exist for a server at a time. Valid map types are 'square' and 'hex'. 'edge_length' specifies the length of each edge of a space in pixels.
+		"""
 		server_id = ctx.message.server.id
 		if server_id in self.maps:
 			await self.bot.say("A map for this server already exists. Use the 'delete' command before creating new self.maps.")
 		else:
 			try:
-				self.maps[server_id] = Map(int(width), int(height), int(edge_length))
+				self.maps[server_id] = Map(int(width), int(height), int(edge_length), type)
 			except ValueError as e:
-				self.bot.say("Invalid integer parameter")
+				return await self.bot.say(str(e))
 			#draw map
 			await self.bot.say("Map created.")
 
@@ -27,7 +29,7 @@ class Maptools:
 		server_id = ctx.message.server.id
 		if server_id in self.maps:
 			m = self.maps.pop(server_id)
-			m.clearTokens()
+			m.clear_tokens()
 			await self.bot.say("Map deleted.")
 		else:
 			await self.bot.say("There is no map for this server.")
@@ -37,7 +39,7 @@ class Maptools:
 		server_id = ctx.message.server.id
 		if server_id in self.maps:
 			server_map = self.maps[server_id]
-			server_map.drawMap("maps/"+server_id+".png")
+			server_map.draw_map("maps/"+server_id+".png")
 			await self.bot.upload("maps/"+server_id+".png")
 
 			if len(server_map.tokens) >= 1:
@@ -55,10 +57,10 @@ class Maptools:
 			server_map = self.maps[server_id]
 			try:
 				token_image = Image.open(urlopen(image_url))
-				hex = server_map.getHex((int(x),int(y)))
+				hex = server_map.get_space((int(x),int(y)))
 				if hex is None:
 					return await self.bot.say(f"Map position ({x},{y}) is invalid.")
-				server_map.addToken(name, hex, token_image, image_url)
+				server_map.add_token(name, hex, token_image, image_url)
 				await self.bot.say("Token added.")
 			except ValueError as e:
 				await self.bot.say(str(e))
@@ -73,7 +75,7 @@ class Maptools:
 		if server_id in self.maps:
 			server_map = self.maps[server_id]
 			try:
-				server_map.deleteToken(name)
+				server_map.delete_token(name)
 				await self.bot.say(f"Token {name} deleted.")
 			except ValueError as e:
 				await self.bot.say(str(e))
@@ -105,8 +107,8 @@ class Maptools:
 				return await self.bot.say("Invalid direction. Valid directions are (n)orth, (s)outh, northeast, northwest, southeast, southwest, ne, nw, se, sw.")
 			server_map = self.maps[server_id]
 			try:
-				server_map.stepToken(name, denum, int(distance))
-				server_map.drawMap("maps/"+server_id+".png", True)
+				server_map.step_token(name, denum, int(distance))
+				server_map.draw_map("maps/"+server_id+".png", True)
 				await self.bot.upload("maps/"+server_id+".png")
 			except ValueError as e:
 				await self.bot.say(str(e))
@@ -119,11 +121,11 @@ class Maptools:
 		if server_id in self.maps:
 			server_map = self.maps[server_id]
 			try:
-				hex = server_map.getHex((int(x),int(y)))
+				hex = server_map.get_space((int(x),int(y)))
 				if hex is None:
 					return await self.bot.say(f"Map position ({x},{y}) is invalid.")
-				server_map.moveToken(name, hex)
-				server_map.drawMap("maps/"+server_id+".png", True)
+				server_map.move_token(name, hex)
+				server_map.draw_map("maps/"+server_id+".png", True)
 				await self.bot.upload("maps/"+server_id+".png")
 			except ValueError as e:
 				await self.bot.say(str(e))
