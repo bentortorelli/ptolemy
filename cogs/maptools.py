@@ -10,7 +10,7 @@ class Maptools:
 		self.bot = bot
 	@commands.command(pass_context=True)
 	async def create(self, ctx, width, height, type = "square", edge_length=50):
-		"""Creates a new map for the server.
+		"""Creates a new map for the server of 'width' x 'height' grid spaces.
 		Only one map can exist for a server at a time. Valid map types are 'square' and 'hex'. 'edge_length' specifies the length of each edge of a space in pixels.
 		"""
 		server_id = ctx.message.server.id

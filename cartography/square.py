@@ -48,15 +48,15 @@ class Square(GridSpace):
 		ImageDraw.Draw(image).text(self.text_position, self.text, font = self.font, fill = self.text_color)
 
 		token_positions = list()
-		token_size = (self.edge_length, self.edge_length)
+		token_size = (int(self.edge_length), int(self.edge_length))
 
 		if len(self.contents) <= 1:
 			token_positions = [
 				(self.center[0] - int(self.edge_length/2), self.center[1] - int(self.edge_length/2))]
 		elif len(self.contents) == 2:
 			token_positions = [
-				(self.center[0] - int(self.edge_length/2), self.center[1] - int(self.edge_length/4)),
-				(self.center[0], self.center[1] - int(self.edge_length/4))]
+				(self.center[0] - int(self.edge_length/2), self.center[1]),
+				(self.center[0], self.center[1])]
 			token_size = (int(self.edge_length/2), int(self.edge_length/2))
 		else:
 			token_positions = [
@@ -75,5 +75,5 @@ class Square(GridSpace):
 
 		if len(self.contents) > 4:
 			overflow_text = "..."
-			dot_position = (self.center[0] - self.font.getsize(overflow_text)[0]/2, self.center[1] + int(self.edge_length)/4)
+			dot_position = (self.center[0] - self.font.getsize(overflow_text)[0]/2, self.center[1] - self.font.getsize(overflow_text)[1])
 			ImageDraw.Draw(image).text(dot_position, overflow_text, font = self.font, fill = self.text_color)
