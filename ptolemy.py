@@ -3,7 +3,10 @@ import discord
 import asyncio
 import configparser
 
-#test
+import discord
+import logging
+
+
 
 class Ptolemy(commands.Bot):
 	def __init__(self):
@@ -28,6 +31,10 @@ class Ptolemy(commands.Bot):
 		await self.say("hello")
 
 if __name__ == "__main__":
+	logger = logging.getLogger('discord')
+	logger.setLevel(logging.INFO)
+	handler = logging.FileHandler(filename='discord.log', encoding='utf-8', mode='w')
+	handler.setFormatter(logging.Formatter('%(asctime)s:%(levelname)s:%(name)s: %(message)s'))
+	logger.addHandler(handler)
+
 	p = Ptolemy()
-	#new_map = Map(10, 30, 50)
-	#new_map.drawMap('rectangle.png')
