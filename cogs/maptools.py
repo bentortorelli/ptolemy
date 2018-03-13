@@ -10,8 +10,9 @@ class Maptools:
 		self.bot = bot
 	@commands.command(pass_context=True)
 	async def create(self, ctx, width, height, type = "square", edge_length=50):
-		"""Creates a new map for the server of 'width' x 'height' grid spaces.
-		Only one map can exist for a server at a time. Valid map types are 'square' and 'hex'. 'edge_length' specifies the length of each edge of a space in pixels.
+		"""Creates a new map for the server.
+		Only one map can exist for a server at a time. Map dimensions are 'width' x 'height' grid spaces. 
+		Valid map types are 'square' and 'hex'. 'edge_length' specifies the length of each edge of a space in pixels.
 		"""
 		server_id = ctx.message.server.id
 		if server_id in self.maps:
@@ -24,8 +25,9 @@ class Maptools:
 			#draw map
 			await self.bot.say("Map created.")
 
-	@commands.command(pass_context=True, brief="Deletes the current server map.")
+	@commands.command(pass_context=True)
 	async def delete(self, ctx):
+		"""Deletes the current server map."""
 		server_id = ctx.message.server.id
 		if server_id in self.maps:
 			m = self.maps.pop(server_id)
@@ -34,8 +36,11 @@ class Maptools:
 		else:
 			await self.bot.say("There is no map for this server.")
 
-	@commands.command(pass_context=True, aliases=["highnoon"], brief="Displays the current map to the channel.", description="Generates an image of the map's current state and uploads it to the channel along with a token key.")
+	@commands.command(pass_context=True, aliases=["highnoon"])
 	async def draw(self, ctx):
+		"""Displays the current map to the channel.
+		Generates an image of the map's current state and uploads it to the channel along with a map key of current tokens.
+		"""
 		server_id = ctx.message.server.id
 		if server_id in self.maps:
 			server_map = self.maps[server_id]
@@ -50,8 +55,11 @@ class Maptools:
 		else:
 			await self.bot.say("No map for this server. Use the 'create' command to create a map.")
 
-	@commands.command(pass_context=True, brief="Adds a token to the current map.", description="Adds a token to the map with a given 'name' at position (x,y) using the image at 'image_url'")
+	@commands.command(pass_context=True)
 	async def addtoken(self, ctx, name, x, y, image_url):
+		"""Adds a token to the current map.
+		The token is added to the map with ID 'name' at position ('x','y') using the image at 'image_url'
+		"""
 		server_id = ctx.message.server.id
 		if server_id in self.maps:
 			server_map = self.maps[server_id]
@@ -69,8 +77,11 @@ class Maptools:
 		else:
 			await self.bot.say("There is no map for this server.")
 
-	@commands.command(pass_context=True, brief="Deletes a token from the current map.", description="Deletes the token with the named 'name' from the map.")
+	@commands.command(pass_context=True)
 	async def deletetoken(self, ctx, name):
+		"""Deletes a token from the current map.
+		The token with with ID 'name' is removed from the map.
+		"""
 		server_id = ctx.message.server.id
 		if server_id in self.maps:
 			server_map = self.maps[server_id]
@@ -82,8 +93,13 @@ class Maptools:
 		else:
 			await self.bot.say("There is no map for this server.")
 
-	@commands.command(pass_context=True, brief="Steps a token in a compass direction.", description="Steps token with 'name' 'distance' spaces in a compass direction. Valid directions are: (n)orth, (s)outh, northeast, northwest, southeast, southwest, ne, nw, se, sw.")
+	@commands.command(pass_context=True)
 	async def step(self, ctx, name, direction, distance):
+		"""Steps a token in a compass direction.
+		The token with ID 'name' is moved 'distance' spaces in a compass direction. 
+		Valid directions are: north, south, east, west, northeast, northwest, southeast, southwest, n, s, e, w, ne, nw, se, sw.
+		Some directions may not be valid on all map types  (e.g. east and west on hex grid maps)
+		"""
 		server_id = ctx.message.server.id
 		if server_id in self.maps:
 			denum = None
@@ -104,7 +120,7 @@ class Maptools:
 			elif direction.lower() in ["southwest", "sw"]:
 				denum = Direction.SOUTH_WEST
 			else:
-				return await self.bot.say("Invalid direction. Valid directions are (n)orth, (s)outh, northeast, northwest, southeast, southwest, ne, nw, se, sw.")
+				return await self.bot.say("Invalid direction. See 'help step' for valid directions.")
 			server_map = self.maps[server_id]
 			try:
 				server_map.step_token(name, denum, int(distance))
@@ -115,8 +131,11 @@ class Maptools:
 		else:
 			await self.bot.say("There is no map for this server.")
 
-	@commands.command(pass_context=True, brief="Moves a token to a space directly.", description="Moves token with 'name' to map position ('x','y')")
+	@commands.command(pass_context=True)
 	async def move(self, ctx, name, x, y):
+		"""Moves a token to a space directly.
+		The token with ID 'name' is moved directly to map position ('x','y')
+		"""
 		server_id = ctx.message.server.id
 		if server_id in self.maps:
 			server_map = self.maps[server_id]
