@@ -68,7 +68,5 @@ class GridSpace(ABC):
 		pass
 	
 	def draw(self, image):
-		space_image = Image.new("RGBA", (self.map.image_width, self.map.image_height))
-		ImageDraw.Draw(space_image).polygon(self.coords, outline = "black", fill = (0,0,0,0))
-		image.paste(space_image, mask=space_image)
+		ImageDraw.Draw(image).polygon(self.coords, outline = "black", fill = (0,0,0,0))
 		ImageDraw.Draw(image).text(self.text_position, self.text, font = self.font, fill = self.text_color)

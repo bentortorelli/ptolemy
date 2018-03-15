@@ -86,9 +86,13 @@ class Map:
 		else:
 			im = self.background_image.resize((self.image_width, self.image_height), Image.LANCZOS)
 
-		# Draw each space
+		# Draw each space onto an image
+		space_image = Image.new("RGBA", (self.image_width, self.image_height))
 		for pos, space in self.spaces.items():
-			space.draw(im)
+			space.draw(space_image)
+
+		# Paste space image onto background image
+		im.paste(space_image, mask=space_image)
 
 		# If draw_move flag is set, draw a red line between the old and new positions
 		if draw_move:
