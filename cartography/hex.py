@@ -57,9 +57,8 @@ class Hex(GridSpace):
 			return None
 			
 	def draw(self, image):
-		ImageDraw.Draw(image).polygon(self.coords, outline = "black", fill = self.color)
-		ImageDraw.Draw(image).text(self.text_position, self.text, font = self.font, fill = self.text_color)
-
+		super().draw(image)
+		
 		token_positions = list()
 		token_size = (self.edge_length, self.edge_length)
 

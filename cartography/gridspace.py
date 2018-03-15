@@ -67,6 +67,8 @@ class GridSpace(ABC):
 	def get_adjacent(self, direction):
 		pass
 	
-	@abstractmethod	
 	def draw(self, image):
-		pass
+		space_image = Image.new("RGBA", (self.map.image_width, self.map.image_height))
+		ImageDraw.Draw(space_image).polygon(self.coords, outline = "black", fill = (0,0,0,0))
+		image.paste(space_image, mask=space_image)
+		ImageDraw.Draw(image).text(self.text_position, self.text, font = self.font, fill = self.text_color)

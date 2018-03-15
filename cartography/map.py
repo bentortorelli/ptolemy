@@ -6,12 +6,14 @@ from specktre import tilings
 import math
 	
 class Map:
-	def __init__(self, width, height, edge_length, type = "square"):
+	def __init__(self, width, height, edge_length, type = "square", background_color = "white", background_image = None):
 		self.edge_length = edge_length
 		self.map_color = "white" #error check map color
 		self.spaces = dict()
 		self.last_move = None
 		self.tokens = dict()
+		self.background_color = background_color
+		self.background_image = background_image
 
 		space_list = None
 		if type == "square":
@@ -77,13 +79,18 @@ class Map:
 				
 
 	def draw_map(self, file_path, draw_move=False):
-		# Create a blank 500x500 pixel image
-		im = Image.new("RGB", (self.image_width, self.image_height), color = 'white')
+		# Create a base map image
+		im = None
+		if self.background_image is None:
+			im = Image.new("RGBA", (self.image_width, self.image_height), color = self.background_color)
+		else:
+			im = self.background_image.resize((self.image_width, self.image_height), Image.LANCZOS)
 
-		# Draw
+		# Draw each space
 		for pos, space in self.spaces.items():
 			space.draw(im)
 
+		# If draw_move flag is set, draw a red line between the old and new positions
 		if draw_move:
 			line_coords = (self.last_move[0].center[0], self.last_move[0].center[1], self.last_move[1].center[0], self.last_move[1].center[1])
 			ImageDraw.Draw(im).line(line_coords, width=10, fill = "red")

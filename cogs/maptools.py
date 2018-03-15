@@ -1,7 +1,7 @@
 from discord.ext import commands
 from cartography import Map, Token, Direction
 from urllib.request import urlopen
-from PIL import Image
+from PIL import Image, ImageColor
 import discord
 
 class Maptools:
@@ -9,20 +9,27 @@ class Maptools:
 		self.maps = dict()
 		self.bot = bot
 	@commands.command(pass_context=True)
-	async def create(self, ctx, width, height, type = "square", edge_length=50):
+	async def create(self, ctx, width, height, type = "square", edge_length=50, background_color = "white", background_url = None):
 		"""Creates a new map for the server.
 		Only one map can exist for a server at a time. Map dimensions are 'width' x 'height' grid spaces. 
 		Valid map types are 'square' and 'hex'. 'edge_length' specifies the length of each edge of a space in pixels.
 		"""
 		server_id = ctx.message.server.id
 		if server_id in self.maps:
-			await self.bot.say("A map for this server already exists. Use the 'delete' command before creating new self.maps.")
+			await self.bot.say("A map for this server already exists. Use the 'delete' command before creating new maps.")
 		else:
 			try:
-				self.maps[server_id] = Map(int(width), int(height), int(edge_length), type)
+				ImageColor.getrgb(background_color)
+
+				bg_image = None
+				if background_url is not None:
+					bg_image = Image.open(urlopen(background_url))
+
+				self.maps[server_id] = Map(int(width), int(height), int(edge_length), type, background_color, bg_image)
 			except ValueError as e:
 				return await self.bot.say(str(e))
-			#draw map
+			except OSError as e:
+				await self.bot.say("Background image URL is inaccessible.")
 			await self.bot.say("Map created.")
 
 	@commands.command(pass_context=True)
